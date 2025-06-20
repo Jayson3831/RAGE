@@ -27,7 +27,7 @@ def parse_args():
                        help="选择数据集")
     
     # 模型参数
-    parser.add_argument("--LLM", type=str, default='qwen',
+    parser.add_argument("--LLM", type=str, default='vllm',
                        help="LLM模型名称")
     parser.add_argument("--max_length", type=int, default=1024,
                        help="LLM输出最大长度")
@@ -56,7 +56,7 @@ def parse_args():
                        help="每个mid的Top-K关系相似度来求平均")
 
     # 剪枝选项
-    parser.add_argument("--prune_tools", type=str, default="sentencebert",
+    parser.add_argument("--prune_tools", type=str, default="llm",
                        choices=["llm", "sentencebert"],
                        help="剪枝工具")
     parser.add_argument("--no-remove_unnecessary_rel", action="store_false",
@@ -64,11 +64,11 @@ def parse_args():
                        help="不移除不必要的关系")
     
     # 对比方法
-    parser.add_argument("--method", type=str, default="cot",
+    parser.add_argument("--method", type=str, default="rage",
                         choices=['io', 'cot', 'base', 'rage'], help="实验对比方法")
     
     # 智能体参数
-    parser.add_argument("--agent_count", type=int, default=3, help="实验对比方法")
+    parser.add_argument("--agent_count", type=int, default=1, help="实验对比方法")
     return parser.parse_args()
 
 def main():

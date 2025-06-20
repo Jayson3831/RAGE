@@ -75,7 +75,7 @@ class LLMHandler:
 
         return content
 
-    def run_llm(self, prompt, temperature=0.1, max_tokens=1024, openai_api_keys="EMPTY", engine="azure_openai"):
+    def run_llm(self, prompt, temperature=0.1, max_tokens=1024, openai_api_keys="EMPTY", engine="api"):
         messages = [{"role": "user", "content": prompt}]
 
         if engine == "vllm":

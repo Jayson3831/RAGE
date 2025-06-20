@@ -20,6 +20,7 @@ def main():
     Sbert = MODEL['minilm']
     dataset = "webqsp"
     top_k = 5  # 可调参数：取每个mid的Top-K关系相似度来平均
+    agent_count = 1
     keywords_num = 3
     correct_count = 0
 
@@ -69,7 +70,7 @@ def main():
                 mid_scores.append((eid, k, avg_top_score))
 
         # 3. 选出 top-3 相似度的 mid
-        predicted = sorted(mid_scores, key=lambda x: x[2], reverse=True)[:3]
+        predicted = sorted(mid_scores, key=lambda x: x[2], reverse=True)[:agent_count]
 
         # 4. 计算准确率
         if any(p[0] in ground_truth for p in predicted):

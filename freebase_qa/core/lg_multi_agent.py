@@ -146,7 +146,7 @@ class KnowledgeGraphReasoningSystem:
                 mid_scores.append((eid, k, avg_top_score))
 
         # 3. 选出 top-3 相似度的 mid
-        top_mids = sorted(mid_scores, key=lambda x: x[2], reverse=True)[:3]
+        top_mids = sorted(mid_scores, key=lambda x: x[2], reverse=True)[:state["args"].agent_count]
 
         # 4. 构造 topic_entities 格式：{agent_id: {mid: name}}
         topic_entities = {i + 1: {mid: name} for i, (mid, name, _) in enumerate(top_mids)}
@@ -218,9 +218,9 @@ class KnowledgeGraphReasoningSystem:
 
     def supervisor(self, state: DiscussionState):
         all_chains = [chain for chains in state.get("reasoning_chains", {}).values() for chain in chains]
-        combined_summary = "\n\n".join(
-            " ".join(summaries) for summaries in state.get("knowledge", {}).values()
-        )
+        # combined_summary = "\n\n".join(
+        #     " ".join(summaries) for summaries in state.get("knowledge", {}).values()
+        # )
 
         if not state.get("candidate_entities"):
             return self._finalize_state(state, "no_active_agents", self.reason_engine.generate_without_explored_paths(state["question"], state["args"]), {})

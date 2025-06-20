@@ -33,9 +33,9 @@ EMBEDDING = {
 }
 
 # 提示词配置
-GENERATE_TOPIC_ENTITY = """Given a multi-step reasoning question, identify and output the unique Anchor entity present in the question to initiate the reasoning process. Refrain from including any reasoning steps or the final answer.
+GENERATE_TOPIC_ENTITY = """Identify and output the unique topic entity in the following question. 
 Question: {}
-Anchor Entity:
+Topic Entity:
 """
 
 EXTRACT_RELATION_PROMPT = """Please retrieve %s relations (separated by semicolon) that contribute to the question and rate their contribution on a scale from 0 to 1 (the sum of the scores of %s relations is 1).
@@ -187,30 +187,29 @@ Follow the template above and only answer the questions asked, without generatin
 
 """
 
-MULTITOPIC_ENTITIES_PROMPT = """Extract all topic entities from the given multi-hop question. Topic entities are proper nouns, named entities, or specific concepts that are crucial for retrieving external knowledge. They may come from different sub-questions that contribute to the final answer. If there are multiple topic entities, separate them with commas.
-
+MULTITOPIC_ENTITIES_PROMPT = """Identify the topic entities in the following question.
 Examples:
 
-Q: Who directed the movie in which Leonardo DiCaprio played Jordan Belfort?
-A: Leonardo DiCaprio, Jordan Belfort
+Q: what is the name of justin bieber brother?
+A: Justin Bieber
 
-Q: Which team won the Champions League in the same year that Spain won the FIFA World Cup?
-A: Champions League, FIFA World Cup, Spain
+Q: what character did natalie portman play in star wars?
+A: Natalie Portman
 
-Q: Who was the US president when the Berlin Wall fell?
-A: US president, Berlin Wall
+Q: what country is the grand bahama island in?
+A: Grand Bahama
 
-Q: Which book was written by the author of "Pride and Prejudice" and published after 1800?
-A: Pride and Prejudice
+Q: what time zone am i in cleveland ohio?
+A: Cleveland
 
-Q: What is the capital of the country where Mount Everest is located?
-A: Mount Everest
+Q: which countries border the us?
+A: United States of America
 
-Q: Who won the Nobel Prize in Physics in the same year that Albert Einstein died?
+Q: who won the nobel prize in physics in the same year that albert einstein died?
 A: Nobel Prize in Physics, Albert Einstein
 
-Q: In which city was the founder of Tesla Motors born?
-A: Tesla Motors
+Q: where are the nfl redskins from?
+A: Washington Redskins
 
 Q: {}
 A: 

@@ -5,6 +5,7 @@ SPARQL_TEMPLATES = {
             ?entity ns:type.object.name ?name .
             FILTER(?name = "%s"@en)
         }
+        LIMIT 1
     """,
     
     'relations': """

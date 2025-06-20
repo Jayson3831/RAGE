@@ -558,28 +558,6 @@ class ReasoningEngine:
         summary = data.get("summary", "")
         return is_relevant, summary
         
-    def build_prompt(self, question: str, candidates: List[Dict]) -> str:
-        candidate_text = ""
-        for i, c in enumerate(candidates):
-            filtered_predicates = [p for p in c["predicates"] if self.is_valid_predicate(p)]
-            predicates_str = ", ".join(filtered_predicates[:10])
-            candidate_text += f"{i+1}. Name: {c['name']}\n   MID: {c['mid']}\n   Relationships: {predicates_str}\n\n"
-
-        prompt = f"""
-    You are a knowledgeable assistant working with a knowledge graph.
-    Given a question and a list of entity candidates, each with a name, MID, and a list of relationships (Freebase predicates), identify the top 3 MIDs that are most semantically relevant to the question.
-
-    ### Question:
-    {question}
-
-    ### Candidates:
-    {candidate_text}
-
-    Return your result in the following JSON format:
-    {{"top_mids": ["MID1", "MID2", "MID3"]}}
-    """
-        return prompt.strip()
-
     def is_valid_predicate(self, predicate: str) -> bool:
         return not any(predicate.startswith(prefix) for prefix in ["atom.feed", "freebase.", "dataworld", "common.document", "type.object.type", "type.object.permission","type.type."])
     
