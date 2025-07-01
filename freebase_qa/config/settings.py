@@ -15,18 +15,12 @@ JSON_PATH = '../outputs/{method}_{dataset}_{suffix}.json'
 # SPARQL 配置
 SPARQL_ENDPOINT = "http://172.18.34.27:8890/sparql"
 
-# 模型配置
-MODEL = {
-    'qwen': "Qwen/Qwen3-8B",
-    'llama': "meta-llama/Llama-3.1-8B-Instruct",
-    'minilm': "sentence-transformers/all-MiniLM-L6-v2"
-}
-
 # 其他配置
 UNKNOWN_ENTITY = "UnName_Entity"
 FINISH_ID = "[FINISH_ID]"
 FINISH_ENTITY = "[FINISH]"
 
+# 向量文件
 EMBEDDING = {
     'index_path': '../Freebase/index/L6_dedup_embeddings.index',
     'embeddings_path': '../Freebase/index/L6_dedup_embeddings.npy',

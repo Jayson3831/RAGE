@@ -3,9 +3,7 @@ from core.freebase_client import FreebaseClient
 from core.llm_handler import LLMHandler
 from core.semantic_search import SemanticSearch
 from core.data_processor import DataProcessor
-from config.settings import (
-    MODEL, MULTITOPIC_ENTITIES_PROMPT
-)
+from config.settings import MULTITOPIC_ENTITIES_PROMPT
 import os, sys
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "4"
@@ -17,12 +15,17 @@ def construct_gen_prompt(question):
 
 def main():
     llm = "gpt"
-    Sbert = MODEL['minilm']
+    Sbert = "sentence-transformers/all-MiniLM-L6-v2"
     dataset = "webqsp"
     top_k = 5  # 可调参数：取每个mid的Top-K关系相似度来平均
     keywords_num = 3
     agent_count = 1
     correct_count = 0
+    temperature=0.7
+    max_tokens=1024
+    openai_api_keys="EMPTY"
+    base_url="http://localhost:8000/v1"
+    engine="api"
 
     fb_client = FreebaseClient()
     llm_handler = LLMHandler(llm, Sbert)
@@ -38,7 +41,7 @@ def main():
 
         # 1. 获取关键词对应的实体及其所有关系
         prompt = construct_gen_prompt(question)
-        response = llm_handler.run_llm(prompt)
+        response = llm_handler.run_llm(prompt, temperature, max_tokens, openai_api_keys, base_url, engine)
         words = [e.strip() for e in response.split(",")]
         if not words:
             continue

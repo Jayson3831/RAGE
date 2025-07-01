@@ -1,7 +1,7 @@
 import argparse
 from tqdm import tqdm
 from config.settings import (
-    MODEL, OUTPUT_PATH, JSON_PATH, IO_PROMPT, COT_PROMPT
+    OUTPUT_PATH, JSON_PATH, IO_PROMPT, COT_PROMPT
 )
 from core.freebase_client import FreebaseClient
 from core.llm_handler import LLMHandler
@@ -31,20 +31,20 @@ def parse_args():
                        help="选择数据集")
     
     # 模型参数
-    parser.add_argument("--LLM", type=str, default='qwen-plus',
+    parser.add_argument("--LLM", type=str, default='Qwen/Qwen3-235B-A22B',
                        help="LLM模型名称")
-    parser.add_argument("--max_length", type=int, default=1024,
+    parser.add_argument("--max_tokens", type=int, default=1024,
                        help="LLM输出最大长度")
-    parser.add_argument("--temperature_exploration", type=float, 
-                       default=0.4,
-                       help="探索阶段温度参数")
-    parser.add_argument("--temperature_reasoning", type=float,
-                       default=0.1,
-                       help="推理阶段温度参数")
-    parser.add_argument("--Sbert", type=str, default='minilm',
+    parser.add_argument("--temperature", type=float, 
+                       default=0.7, help="大模型温度系数")
+    parser.add_argument("--Sbert", type=str, default='sentence-transformers/all-MiniLM-L6-v2',
                        help="LLM模型名称")
     parser.add_argument("--openai_api_keys", type=str,
-                        default="", help="if the LLM_type is gpt-3.5-turbo or gpt-4, you need add your own openai api keys.")
+                        default=os.getenv("MODELSCOPE_SDK_TOKEN"), help="your own openai api keys.")
+    parser.add_argument("--url", type=str,
+                        default="https://api-inference.modelscope.cn/v1/", help="base url.")
+    parser.add_argument("--engine", type=str,
+                        default="api", help="which platform you choose.")
 
     # 搜索参数
     parser.add_argument("--width", type=int, default=3,
@@ -78,12 +78,10 @@ def parse_args():
 def main():
     setup_logging()
     args = parse_args()
-    llm = args.LLM
-    Sbert = MODEL[args.Sbert]
     
     # 初始化组件
     fb_client = FreebaseClient()
-    llm_handler = LLMHandler(llm, Sbert)
+    llm_handler = LLMHandler(args.LLM, args.Sbert)
     data_processor = DataProcessor(llm_handler)
     semantic_searcher = SemanticSearch()
     reasoning_engine = ReasoningEngine(fb_client, llm_handler, semantic_searcher)
@@ -96,8 +94,8 @@ def main():
         logger.info(f"Loaded dataset: {args.dataset}, Samples: {len(datas)}")
         
         # 准备输出文件
-        jsonl_file = OUTPUT_PATH.format(method=args.method, dataset=args.dataset, suffix=args.LLM)
-        json_file = JSON_PATH.format(method=args.method, dataset=args.dataset, suffix=args.LLM)
+        jsonl_file = OUTPUT_PATH.format(method=args.method, dataset=args.dataset, suffix=args.LLM.split("/")[-1])
+        json_file = JSON_PATH.format(method=args.method, dataset=args.dataset, suffix=args.LLM.split("/")[-1])
         processed_questions = FileUtils.load_processed_questions(jsonl_file)
         
         # 处理问题
@@ -112,12 +110,12 @@ def main():
 
             if args.method == "io":
                 prompt = IO_PROMPT + "\n\nQ: " + question + "\nA: "
-                results = reasoning_engine.llm.run_llm(prompt, args.temperature_reasoning)
+                results = reasoning_engine.llm.run_llm(prompt, args)
                 reasoning_engine.save_results(question, results, [], jsonl_file)
 
             elif args.method == "cot":
                 prompt = COT_PROMPT + "\n\nQ: " + question + "\nA: "
-                results = reasoning_engine.llm.run_llm(prompt, args.temperature_reasoning)
+                results = reasoning_engine.llm.run_llm(prompt, args)
                 reasoning_engine.save_results(question, results, [], jsonl_file)
                 
             elif args.method == "base":

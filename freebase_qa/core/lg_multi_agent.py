@@ -58,7 +58,10 @@ class ReasoningAgent:
         if not candidates:
             return {"reasoning_log": [f"Agent {self.agent_id}: no valid entities found"], "deactivated_agent": self.agent_id}
 
-        chain_of_entities, candidate_entities, new_pre_relations, new_pre_heads = self.engine.triples_prune(state["question"], *candidates)
+        chain_of_entities, candidate_entities, new_pre_relations, new_pre_heads = self.engine.triples_prune(state["question"], *candidates, state["args"])
+        
+        if not chain_of_entities:
+            return {"reasoning_log": [f"Agent {self.agent_id}: no valid reasoning chain found"], "deactivated_agent": self.agent_id}
 
         # flag, chain_of_entities, entities_id, new_pre_relations, new_pre_heads = self.engine.entity_prune(
         #     *candidates, state["args"])

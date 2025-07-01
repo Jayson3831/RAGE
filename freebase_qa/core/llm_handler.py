@@ -9,7 +9,7 @@ import time
 
 class LLMHandler:
     def __init__(self, llm, sbert):
-        self.model_name = llm
+        self.llm = llm
         # self.tokenizer, self.model = self._load_model()
         self.sbert = self._load_sbert(sbert)
     
@@ -76,43 +76,43 @@ class LLMHandler:
 
         return content
 
-    def run_llm(self, prompt, temperature=0.1, max_tokens=1024, openai_api_keys="EMPTY", engine="api"):
+    def run_llm(self, prompt, args):
         messages = [{"role":"system","content":"You are an AI assistant that helps people find information."}]
         message_prompt = {"role":"user","content":prompt}
         messages.append(message_prompt)
 
-        if engine == "vllm":
+        if args.engine == "vllm":
             # 1. vllm部署LLM
             client = OpenAI(
-                api_key=openai_api_keys,
-                base_url="http://localhost:8000/v1",
+                api_key=args.openai_api_keys,
+                base_url=args.url,
             )
             completion = client.chat.completions.create(
                 model="Qwen/Qwen3-8B",  # 按需更换为其它深度思考模型
                 messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                temperature=args.temperature,
+                max_tokens=args.max_tokens,
                 extra_body={"chat_template_kwargs": {"enable_thinking": False}},      # vllm设置是否开启深度思考
                 stream=False,
             )
 
-        elif engine == "api":
+        elif args.engine == "api":
             # 2. API部署LLM
             client = OpenAI(
-                api_key=os.getenv("DASHSCOPE_API_KEY"),
-                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+                api_key=args.openai_api_keys,
+                base_url=args.url,
             )
 
             completion = client.chat.completions.create(
-                model="qwen-plus-latest",  # 按需更换为其它深度思考模型
+                model=self.llm,  # 按需更换为其它深度思考模型
                 messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                temperature=args.temperature,
+                max_tokens=args.max_tokens,
                 extra_body={"enable_thinking": False},                                   # API设置是否开启深度思考
                 stream=False,
             )
 
-        elif engine == "azure_openai":
+        elif args.engine == "azure_openai":
             # 3. Azure openai 部署 GPT4
             client = AzureOpenAI(
                 api_key=os.getenv("AZURE_OPENAI_API_KEY"),
@@ -123,8 +123,8 @@ class LLMHandler:
             completion = client.chat.completions.create(
                 model="gpt-4.1",  # 用 Azure 模型部署名替换
                 messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                temperature=args.temperature,
+                max_tokens=args.max_tokens,
                 stream=False
             )
 

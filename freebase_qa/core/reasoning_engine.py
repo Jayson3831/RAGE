@@ -38,12 +38,12 @@ class ReasoningEngine:
 
     def generate_topic_entity(self, question: str, args: Dict) -> str:
         prompt = self._construct_generated_entity_prompt(question)
-        gen_entity = self.llm.run_llm(prompt)
+        gen_entity = self.llm.run_llm(prompt, args)
         return gen_entity
 
     def generate_keywords(self, question: str, args: Dict) -> List[str]:
         prompt = self._construct_gen_prompt(question)
-        response = self.llm.run_llm(prompt)
+        response = self.llm.run_llm(prompt, args)
         keywords = [e.strip() for e in response.split(",")]
         return keywords
 
@@ -109,12 +109,13 @@ class ReasoningEngine:
                     if finish:
                         self.half_stop(question, cluster_chain, depth, args, output_file)
                         flag_printed =  True
+                        break
                     else:
                         topic_entity = {e: self.fb.get_entity_info(e) for e in entities_id}
-                        continue
             else:
                 self.half_stop(question, cluster_chain, depth, args, output_file)
                 flag_printed =  True
+                break
         
         if not flag_printed:
             # 深度耗尽仍未找到答案
@@ -150,9 +151,12 @@ class ReasoningEngine:
         total_head = []
         
         for entity in relations:
+            relation = entity['relation']
+            if not re.match(r'^[a-z_]+\.[a-z_]+(\.[a-z_]+)?$', relation):
+                continue
             entity_candidates_id = self.entity_search(
                 entity['id'], 
-                entity['relation'], 
+                relation, 
                 entity['head']
             )
             
@@ -203,7 +207,7 @@ class ReasoningEngine:
         if args.prune_tools == "llm":
             prompt = self._construct_relation_prompt(question, entity_name, total_relations, args)
 
-            result = self.llm.run_llm(prompt, args.temperature_exploration)
+            result = self.llm.run_llm(prompt, args)
             flag, relations = self.clean_relations(result, entity_id, head_relations)
         else:
             # docs = [
@@ -240,7 +244,7 @@ class ReasoningEngine:
 
         if args.prune_tools == "llm":
             prompt = self._construct_entity_prompt(question, entity_info['relation'], entity_names)
-            result = self.llm.run_llm(prompt, args.temperature_exploration)
+            result = self.llm.run_llm(prompt, args)
             return [float(x) * entity_info['score'] for x in self.clean_scores(result, entity_names)], entity_names, entity_candidates_id
         else:
             docs = [
@@ -290,7 +294,7 @@ class ReasoningEngine:
         entities_id, relations, candidates, topics, heads, scores = zip(*combined_sorted)
         
         # 取前width个
-        width = args.width
+        width = min(len(candidates), args.width)
         entities_id = list(entities_id[:width])
         relations = list(relations[:width])
         candidates = list(candidates[:width])
@@ -318,7 +322,7 @@ class ReasoningEngine:
         
         return True, chain, list(entities_id), list(relations), list(heads)
 
-    def triples_prune(self, question, eids, rels, cans, tids, heads, scores):
+    def triples_prune(self, question, eids, rels, cans, tids, heads, scores, args):
         topic_names = [self.fb.get_entity_info(tid) for tid in tids]
         infos = [{"subject": tids[i], 
                    "relation": rels[i], 
@@ -331,9 +335,10 @@ class ReasoningEngine:
         origin_triples = [f"({subj}, {rel}, {obj})" for subj, rel, obj in [info["triples"] for info in infos]]
 
         # 大模型筛选三元组
+        origin_triples = list(set(origin_triples))
         candidate_chains = "\n".join(origin_triples)
         prompt = FILTER_TRIPLES.format(question, candidate_chains)
-        response = self.llm.run_llm(prompt)
+        response = self.llm.run_llm(prompt, args)
 
         # 使用正则表达式提取符合格式的三元组
         pattern = r"\(([^,]+?),\s*([^,]+?),\s*([^)]+?)\)"
@@ -343,21 +348,21 @@ class ReasoningEngine:
         candidate_entities = {}
         pre_relations = []
         pre_heads = []
-        reasoning_chains = []
+        reasoning_chains = set()
         for info in infos:
             triple = info["triples"]
             if triple in filtered_triples:
                 candidate_entities[info["object_id"]] = info["object"]
                 pre_relations.append(info["relation"])
                 pre_heads.append(info["head"])
-                reasoning_chains.append(triple)
+                reasoning_chains.add(triple)
 
-        return reasoning_chains, candidate_entities, pre_relations, pre_heads
+        return list(reasoning_chains), candidate_entities, pre_relations, pre_heads
 
     def reasoning(self, question: str, cluster_chain: List, args: Dict) -> Tuple[bool, str]:
         """推理答案"""
         prompt = self._construct_reasoning_prompt(question, cluster_chain)
-        response = self.llm.run_llm(prompt)
+        response = self.llm.run_llm(prompt, args)
         
         result = self.text_utils.extract_answer(response)
         return self.text_utils.is_true(result), response
@@ -367,7 +372,7 @@ class ReasoningEngine:
         prompt = self._construct_reasoning_prompt_with_summary(question, summary)
         
         # 调用 LLM
-        response = self.llm.run_llm(prompt)
+        response = self.llm.run_llm(prompt, args)
         
         # 解析结果
         return self.text_utils.is_yes_in_response(response), response
@@ -380,7 +385,7 @@ class ReasoningEngine:
         #     args.temperature_reasoning
         # )
 
-        return self.llm.run_llm(prompt)
+        return self.llm.run_llm(prompt, args)
 
     def half_stop(self, question: str, cluster_chain: List, depth: int, args: Dict, file_name: str):
         """中途停止处理"""
@@ -395,7 +400,7 @@ class ReasoningEngine:
         #     prompt,
         #     args.temperature_reasoning
         # )
-        return self.llm.run_llm(prompt)
+        return self.llm.run_llm(prompt, args)
 
     def save_results(self, question: str, results: str, cluster_chain: List, file_name: str):
         """保存结果"""
@@ -594,7 +599,7 @@ class ReasoningEngine:
 
         prompt = EXTRACT_USEFUL_INFORMATION.format(question, chain_text)
 
-        response = self.llm.run_llm(prompt)
+        response = self.llm.run_llm(prompt, args)
         response = self.response2json(response)
         data = json.loads(response)
         is_relevant = data.get("is_relevant", False)
@@ -615,7 +620,7 @@ class ReasoningEngine:
         )
 
         prompt = READ_AND_SUMMARIZE.format(question, chain_text)
-        response = self.llm.run_llm(prompt)
+        response = self.llm.run_llm(prompt, args)
 
         return response
 

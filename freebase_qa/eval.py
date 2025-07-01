@@ -1,5 +1,4 @@
 from utils.eval_utils import *
-from config.settings import MODEL
 from utils.file_utils import FileUtils
 import os, sys
 os.chdir(sys.path[0])  #使用文件所在目录
@@ -40,9 +39,11 @@ def eval_em(dataset, output_file, model_name, method, constraints_refuse=True):
 
 if __name__ == '__main__':
     dataset = 'webqsp'
-    model = 'GPT-4.1'
-    method = 'base'
-    json_file = "../outputs/base_webqsp_gpt4.json"
+    model = 'gpt'
+    method = 'rage'
+    json_file = "../outputs/rage_webqsp_gpt.json"
+    jsonl_file = "../outputs/rage_webqsp_gpt.jsonl"
     
+    FileUtils.jsonl2json(jsonl_file, json_file)
     eval_em(dataset, json_file, model, method)
     
