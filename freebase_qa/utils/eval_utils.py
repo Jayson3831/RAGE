@@ -31,7 +31,7 @@ def prepare_dataset_for_eval(dataset_name, output_file):
         with open('../data/qald_10-en.json',encoding='utf-8') as f:
             datas = json.load(f) 
         question_string = 'question'   
-    elif dataset_name == 'webquestions':
+    elif dataset_name == 'webq':
         with open('../data/WebQuestions.json',encoding='utf-8') as f:
             datas = json.load(f)
         question_string = 'question'
@@ -59,15 +59,8 @@ def align(dataset_name, question_string, data, ground_truth_datas):
     answer_list= []
     origin_data = [j for j in ground_truth_datas if j[question_string] == data['question']][0]
     if dataset_name == 'cwq':
-        if 'answers' in origin_data:
-            answers = origin_data["answers"]
-        else:
-            answers = origin_data["answer"]
-        for answer in answers:
-            alias = answer['aliases']
-            ans = answer['answer']
-            alias.append(ans)
-            answer_list.extend(alias)
+        answer = origin_data["answer"]
+        answer_list.append(answer)
 
     elif dataset_name == 'webqsp' or dataset_name == 'webqsp_sampled' or dataset_name == 'noisy_webqsp':
         answers = origin_data["Parses"]
@@ -95,7 +88,7 @@ def align(dataset_name, question_string, data, ground_truth_datas):
         for answer in answers:
             answer_list.append(answers[answer])
         
-    elif dataset_name == 'webquestions':
+    elif dataset_name == 'webq':
         answer_list = origin_data["answers"]
 
     elif dataset_name == 'trex' or dataset_name == 'zeroshotre':
@@ -135,22 +128,20 @@ def check_refuse(string):
     return any(word in string.lower() for word in refuse_words)
 
 
-def exact_match(response, answers):
+def exact_match(response, answer):
     clean_result = response.strip().replace(" ","").lower()
-    for answer in answers:
-        clean_answer = answer.strip().replace(" ","").lower()
-        if clean_result == clean_answer or clean_result in clean_answer or clean_answer in clean_result:
-            return True
+    clean_answer = answer.strip().replace(" ","").lower()
+    if clean_result == clean_answer or clean_result in clean_answer or clean_answer in clean_result:
+        return True
     return False
 
-def save_result2json(dataset_name, num_right, num_error, total_nums, model, method):
+def save_result2json(dataset_name, Hit, Accuracy, model, method):
     results_data = {
         'dataset': dataset_name,
         'model': model,
         'method': method,
-        'Exact Match': float(num_right/total_nums),
-        'Right Samples': num_right,
-        'Error Sampels': num_error
+        'Hit@1': Hit,
+        'Accuracy': Accuracy
     }
     with open('../results/{}_{}_{}_acc.json'.format(method, dataset_name, model), 'a', encoding='utf-8') as f:
         json.dump(results_data, f, ensure_ascii=False, indent=4)

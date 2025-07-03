@@ -29,6 +29,8 @@ class DataProcessor:
         question_field = {
             'webqsp': 'RawQuestion',
             'cwq': 'question',
+            'grailqa': 'question',
+            'webq': 'question',
             'webqsp_sampled': 'RawQuestion',
             'noisy_webqsp': 'NoisyQuestion'
             # 其他数据集映射...

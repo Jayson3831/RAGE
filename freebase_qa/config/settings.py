@@ -4,6 +4,8 @@ from pathlib import Path
 DATASET_PATHS = {
     'cwq': Path('../data/cwq.json'),
     'webqsp': Path('../data/WebQSP.json'),
+    'grailqa': Path('../data/grailqa.json'),
+    'webq': Path('../data/WebQuestions.json'),
     'webqsp_sampled': Path('../data/WebQSP_sampled_600.json'),
     'noisy_webqsp': Path('../data/noisy_WebQSP_sampled_600.json')
     # 其他数据集...

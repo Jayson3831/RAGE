@@ -18,3 +18,5 @@ cd ../freebase_qa/
 python main.py --LLM qwen 
 ```
 `--LLM`参数表示选择的大模型，仅体现在最后的结果中，不改变`run_llm`方法部署的大模型，更换大模型时需同时修改。
+
+nohup python -u main.py --LLM gpt-4o-mini --engine azure_openai --method rage > gpt.log 2>&1 &

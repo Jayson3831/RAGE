@@ -116,12 +116,12 @@ class LLMHandler:
             # 3. Azure openai 部署 GPT4
             client = AzureOpenAI(
                 api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                api_version="2024-02-15-preview",  # API 版本
-                azure_endpoint="https://73476-m9mi3n1l-eastus2.cognitiveservices.azure.com/",
+                api_version="2024-12-01-preview",  # API 版本
+                azure_endpoint="https://rage0612.openai.azure.com/",
             )
 
             completion = client.chat.completions.create(
-                model="gpt-4.1",  # 用 Azure 模型部署名替换
+                model=self.llm,  # 用 Azure 模型部署名替换
                 messages=messages,
                 temperature=args.temperature,
                 max_tokens=args.max_tokens,

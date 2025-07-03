@@ -89,7 +89,7 @@ def main():
     
     try:
         # 加载数据集
-        logger.info("Loading WebQSP dataset...")
+        logger.info(f"Loading {args.dataset} dataset...")
         datas, question_field = data_processor.load_dataset(args.dataset)
         logger.info(f"Loaded dataset: {args.dataset}, Samples: {len(datas)}")
         
@@ -100,22 +100,26 @@ def main():
         
         # 处理问题
         logger.info("Retriving and generating...")
-        for data in tqdm(datas, desc="RAG..."):
+        for data in tqdm(datas, desc=f"{args.method}..."):
             question = data[question_field]
             
             if question in processed_questions:
                 continue
 
-            logger.info("Retriving and generating...")
-
             if args.method == "io":
                 prompt = IO_PROMPT + "\n\nQ: " + question + "\nA: "
-                results = reasoning_engine.llm.run_llm(prompt, args)
+                try:
+                    results = reasoning_engine.llm.run_llm(prompt, args)
+                except:
+                    results = ""
                 reasoning_engine.save_results(question, results, [], jsonl_file)
 
             elif args.method == "cot":
                 prompt = COT_PROMPT + "\n\nQ: " + question + "\nA: "
-                results = reasoning_engine.llm.run_llm(prompt, args)
+                try:
+                    results = reasoning_engine.llm.run_llm(prompt, args)
+                except:
+                    results = ""
                 reasoning_engine.save_results(question, results, [], jsonl_file)
                 
             elif args.method == "base":
