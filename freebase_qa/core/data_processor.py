@@ -32,7 +32,12 @@ class DataProcessor:
             'grailqa': 'question',
             'webq': 'question',
             'webqsp_sampled': 'RawQuestion',
-            'noisy_webqsp': 'NoisyQuestion'
+            'noisy_webqsp': 'Noisy_Question',
+            'noisy_cwq': 'Noisy_Question',
+            'noisy_grailqa': 'Noisy_Question',
+            'noisy_webq': 'Noisy_Question',
+            'hotpotqa': 'question',
+            'triviaqa': 'question',
             # 其他数据集映射...
         }.get(dataset_name, 'question')
         

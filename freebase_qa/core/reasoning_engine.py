@@ -15,7 +15,8 @@ from config.settings import (
     IS_RELEVANT,
     EXTRACT_USEFUL_INFORMATION,
     READ_AND_SUMMARIZE,
-    FILTER_TRIPLES
+    FILTER_TRIPLES,
+    NOISY_PROMPT
 )
 from core.freebase_client import FreebaseClient
 from core.llm_handler import LLMHandler
@@ -47,14 +48,31 @@ class ReasoningEngine:
         keywords = [e.strip() for e in response.split(",")] if isinstance(response, str) else []
         return keywords
 
-    def process_question(self, question: str, topics: List, args: Dict, 
-                        output_file: str) -> bool:
+    def process_question(self, question: str, args: Dict, output_file: str) -> bool:
         """处理单个问题"""
-        topic_entity = {}
-        for topic in topics:
-            eids = self.fb.get_entity_id(topic)
+        mid_scores = []
+        keywords = self.retrieve_keyword(question, args)
+        for k in keywords:
+            eids = self.fb.get_entity_id(k)
             for eid in eids:
-                topic_entity[eid] = topic
+                predicates = self.fb.get_all_relations(eid)
+                if not predicates:
+                    continue
+
+                # 去重（可选）
+                predicates = list(set(predicates))
+
+                # 2. 计算每个 predicate 与问题的相似度
+                sim_scores = self.llm.compute_similarity_batch(question, predicates)
+
+                # 取 Top-K 平均（代替所有平均）
+                top_scores = sorted(sim_scores, reverse=True)[:args.relation_num]
+                avg_top_score = sum(top_scores) / len(top_scores)
+                mid_scores.append((eid, k, avg_top_score))
+
+        top_mids = sorted(mid_scores, key=lambda x: x[2], reverse=True)
+        mid, name, _ = top_mids[0]
+        topic_entity = {mid: name}
 
         cluster_chain = []
         pre_relations = []
@@ -423,6 +441,7 @@ class ReasoningEngine:
 
     def _construct_gen_prompt(self, question: str) -> str:
         return MULTITOPIC_ENTITIES_PROMPT.format(question)
+        # return NOISY_PROMPT.format(question)
 
     def _construct_generated_entity_prompt(self, question: str) -> str:
         return GENERATE_TOPIC_ENTITY.format(question)
@@ -532,10 +551,8 @@ class ReasoningEngine:
         words = self.generate_keywords(question, args)
         if not words:
             return ""
-
-        keywords = set()
+        keywords = set(words)
         for w in words:
-            keywords.add(w)
             query_embedding = self.llm.sbert.encode([w], normalize_embeddings=True, show_progress_bar=False)
             _, indices = self.semantic_searcher.faiss_index.search(query_embedding, args.keyword_num)
             keywords.update(self.semantic_searcher.names[idx] for idx in indices[0])
@@ -602,11 +619,8 @@ class ReasoningEngine:
         prompt = EXTRACT_USEFUL_INFORMATION.format(question, chain_text)
 
         response = self.llm.run_llm(prompt, args)
-        response = self.response2json(response)
-        data = json.loads(response)
-        is_relevant = data.get("is_relevant", False)
-        summary = data.get("information", "")
-        return is_relevant, summary
+        is_rel, info = self.extract_fields(response)
+        return is_rel, info
 
     def read_and_summarize(self, question: str, triplets: List, args) -> Tuple[bool, str]:
         """调用 LLM 判断三元组是否与问题相关"""
@@ -629,21 +643,22 @@ class ReasoningEngine:
     def is_valid_predicate(self, predicate: str) -> bool:
         return not any(predicate.startswith(prefix) for prefix in ["atom.feed", "freebase.", "dataworld", "common.document", "type.object.type", "type.object.permission","type.type."])
     
-    def response2json(self, response):
+    def safe_extract_model_output(self, text):
         try:
-            # 去除 Markdown 包裹符，如 ```json 和 ```
-            response = response.strip()
-            response = re.sub(r'^```(json)?', '', response)
-            response = re.sub(r'```$', '', response)
+            # 优先尝试标准 JSON
+            return json.loads(text)
+        except:
+            # Fallback: 用正则提取
+            is_relevant, information = self.extract_fields(text)
+            return {"is_relevant": is_relevant, "information": information}
 
-            # 替换单引号为双引号（防止 LLM 返回非法 JSON）
-            # fixed_response = fixed_response.replace("'", '"')
-            return response
-        
-        except json.JSONDecodeError as je:
-            logger.warning(f"LLM returned invalid JSON: {je} | Response: {response}")
-            raise
+    def extract_fields(self, text):
+        # 提取 is_relevant 值（大小写不敏感）
+        is_relevant_match = re.search(r'"?is_relevant"?\s*:\s*(true|false)', text, re.IGNORECASE)
+        is_relevant = is_relevant_match.group(1).lower() == 'true' if is_relevant_match else False
 
-        except Exception as e:
-            logger.warning(f"LLM failed to determine the correlation: {e}")
-            raise
+        # 提取 information 值（支持中间有嵌套标点或空格）
+        info_match = re.search(r'"?information"?\s*:\s*"(.*?)"', text, re.DOTALL)
+        information = info_match.group(1).strip() if info_match else "No information extracted."
+
+        return is_relevant, information

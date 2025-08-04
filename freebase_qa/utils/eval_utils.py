@@ -12,9 +12,21 @@ def prepare_dataset_for_eval(dataset_name, output_file):
             datas = json.load(f)
         question_string = 'RawQuestion'
     elif dataset_name == 'noisy_webqsp':
-        with open('../data/noisy_WebQSP_sampled_600.json',encoding='utf-8') as f:
+        with open('../data/noisy_WebQSP.json',encoding='utf-8') as f:
             datas = json.load(f)
-        question_string = 'NoisyQuestion'
+        question_string = 'Noisy_Question'
+    elif dataset_name == 'noisy_grailqa':
+        with open('../data/noisy_grailqa.json',encoding='utf-8') as f:
+            datas = json.load(f)
+        question_string = 'Noisy_Question'
+    elif dataset_name == 'noisy_cwq':
+        with open('../data/noisy_cwq.json',encoding='utf-8') as f:
+            datas = json.load(f)
+        question_string = 'Noisy_Question'
+    elif  dataset_name == 'noisy_webq':
+        with open('../data/noisy_WebQuestions.json',encoding='utf-8') as f:
+            datas = json.load(f)
+        question_string = 'Noisy_Question'
     elif dataset_name == 'webqsp_sampled':
         with open('../data/WebQSP_sampled_600.json',encoding='utf-8') as f:
             datas = json.load(f)
@@ -47,6 +59,14 @@ def prepare_dataset_for_eval(dataset_name, output_file):
         with open('../data/creak.json',encoding='utf-8') as f:
             datas = json.load(f)
         question_string = 'sentence'
+    elif dataset_name == 'hotpotqa':
+        with open('../data/hotpotqa.json',encoding='utf-8') as f:
+            datas = json.load(f)
+        question_string = 'question'
+    elif dataset_name == 'triviaqa':
+        with open('../data/triviaqa.json',encoding='utf-8') as f:
+            datas = json.load(f)
+        question_string = 'question'
     else:
         print("dataset not found, you should pick from {cwq, webqsp, grailqa, simpleqa, qald, webquestions, trex, zeroshotre, creak}.")
         exit(-1)
@@ -58,11 +78,11 @@ def prepare_dataset_for_eval(dataset_name, output_file):
 def align(dataset_name, question_string, data, ground_truth_datas):
     answer_list= []
     origin_data = [j for j in ground_truth_datas if j[question_string] == data['question']][0]
-    if dataset_name == 'cwq':
+    if dataset_name == 'cwq' or dataset_name == 'noisy_cwq' or dataset_name == 'hotpotqa' or dataset_name == 'triviaqa':
         answer = origin_data["answer"]
         answer_list.append(answer)
 
-    elif dataset_name == 'webqsp' or dataset_name == 'webqsp_sampled' or dataset_name == 'noisy_webqsp':
+    elif dataset_name == 'webqsp' or dataset_name == 'noisy_webqsp':
         answers = origin_data["Parses"]
         for answer in answers:
             for name in answer['Answers']:
@@ -71,7 +91,7 @@ def align(dataset_name, question_string, data, ground_truth_datas):
                 else:
                     answer_list.append(name['EntityName'])
 
-    elif dataset_name == 'grailqa':
+    elif dataset_name == 'grailqa' or dataset_name == 'noisy_grailqa':
         answers = origin_data["answer"]
         for answer in answers:
             if "entity_name" in answer:
@@ -88,7 +108,7 @@ def align(dataset_name, question_string, data, ground_truth_datas):
         for answer in answers:
             answer_list.append(answers[answer])
         
-    elif dataset_name == 'webq':
+    elif dataset_name == 'webq' or dataset_name == 'noisy_webq':
         answer_list = origin_data["answers"]
 
     elif dataset_name == 'trex' or dataset_name == 'zeroshotre':
@@ -134,6 +154,21 @@ def exact_match(response, answer):
     if clean_result == clean_answer or clean_result in clean_answer or clean_answer in clean_result:
         return True
     return False
+
+def eval_hit(prediction, answers):
+    for answer in answers:
+        if exact_match(prediction, answer):
+            return 1
+    return 0
+
+def eval_acc(prediction, answers):
+    matched = 0
+    if len(answers) == 0:
+        return 0
+    for answer in answers:
+        if exact_match(prediction, answer):
+            matched += 1
+    return matched / len(answers)
 
 def save_result2json(dataset_name, Hit, Accuracy, model, method):
     results_data = {

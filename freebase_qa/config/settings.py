@@ -7,15 +7,22 @@ DATASET_PATHS = {
     'grailqa': Path('../data/grailqa.json'),
     'webq': Path('../data/WebQuestions.json'),
     'webqsp_sampled': Path('../data/WebQSP_sampled_600.json'),
-    'noisy_webqsp': Path('../data/noisy_WebQSP_sampled_600.json')
+    'noisy_webqsp': Path('../data/noisy_WebQSP.json'),
+    'noisy_grailqa': Path('../data/noisy_grailqa.json'),
+    'noisy_cwq': Path('../data/noisy_cwq.json'),
+    'noisy_webq': Path('../data/noisy_WebQuestions.json'),
+    'hotpotqa': Path('../data/hotpotqa.json'),
+    'triviaqa': Path('../data/triviaqa.json'),
     # 其他数据集...
 }
 OUTPUT_PATH = '../outputs/{method}_{dataset}_{suffix}.jsonl'
-
 JSON_PATH = '../outputs/{method}_{dataset}_{suffix}.json'
 
+PARA_JSONL = '../outputs/para/{dataset}_neighbors{relation_num}_agents{agent_count}_depth{depth}_width{width}.jsonl'
+PARA_JSON = '../outputs/para/{dataset}_neighbors{relation_num}_agents{agent_count}_depth{depth}_width{width}.json'
+
 # SPARQL 配置
-SPARQL_ENDPOINT = "http://172.18.34.27:8890/sparql"
+SPARQL_ENDPOINT = "http://localhost:8890/sparql"
 
 # 其他配置
 UNKNOWN_ENTITY = "UnName_Entity"
@@ -222,6 +229,43 @@ Tesla Motors
 
 Q: {}
 
+"""
+
+NOISY_PROMPT = """You are an expert in data cleaning and entity recognition. Your task is to identify the core entities from a noisy question, correct any typos or variations, and return the original, correct keywords.
+
+Instructions:
+
+Read the user's question, which may contain spelling errors, typos, or alternative phrasings.
+Identify the main entities (e.g., people, places, organizations, concepts).
+Based on your knowledge, restore these entities to their most likely original and correct form.
+Return these restored keywords as a simple comma-separated list. Do not include any explanation or extra text.
+
+Examples:
+
+Who directed the movie in which Leanardo DiCaprio played Jordon Belfort?
+Leonardo DiCaprio, Jordan Belfort
+
+Which team won the Champians League in the same year that Spian won the FIFA Wold Cup?
+Champions League, Spain, FIFA World Cup
+
+Who was the US preident when the Brelin Wall fell?
+US president, Berlin Wall
+
+Which book was written by the author of "Pride and Prejudce" and published after 1800?
+Pride and Prejudice
+
+What is the capital of the country where Mount Everset is located?
+Mount Everest
+
+Who won the Nobel Prize in Phisics in the same year that Albert Einstien died?
+Nobel Prize in Physics, Albert Einstein
+
+Noisy Question: In which city was the founder of Telsa Motors born?
+Tesla Motors
+
+Now, process the following noisy question:
+
+{}
 """
 
 REASONING_PROMPT = """Given a question and a summary text, you are asked to answer whether it's sufficient for you to answer the question with both the triplets and the summary.

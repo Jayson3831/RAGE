@@ -73,10 +73,6 @@ class ReasoningAgent:
         #     eid: self.fb.get_entity_info(eid) for eid in entities_id if eid != FINISH_ID
         # }
 
-        # is_relevant, summary = self.engine.is_relevant_to_question(state["question"], chain_of_entities, state["args"])
-        # if not is_relevant:
-        #     return {"reasoning_log": [f"Agent {self.agent_id}: triples are irrelevant. Stopped."], "deactivated_agent": self.agent_id}
-
         return {
             "candidate_entities": {self.agent_id: candidate_entities},
             "pre_heads": {self.agent_id: new_pre_heads},

@@ -84,8 +84,8 @@ class LLMHandler:
         if args.engine == "vllm":
             # 1. vllm部署LLM
             client = OpenAI(
-                api_key=args.openai_api_keys,
-                base_url=args.url,
+                api_key="Empty",
+                base_url="http://localhost:8000/v1",
             )
             completion = client.chat.completions.create(
                 model="Qwen/Qwen3-8B",  # 按需更换为其它深度思考模型
@@ -119,9 +119,9 @@ class LLMHandler:
         elif args.engine == "azure_openai":
             # 3. Azure openai 部署 GPT4
             client = AzureOpenAI(
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                api_version="2024-12-01-preview",  # API 版本
-                azure_endpoint="https://rage0612.openai.azure.com/",
+                api_key=args.openai_api_keys,
+                api_version="",  # API 版本
+                azure_endpoint=args.url,
             )
 
             try:

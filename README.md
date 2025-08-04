@@ -1,22 +1,29 @@
 ## Project Structure
-+ `data/`: 数据集
-+ `Freebase/`: 知识图谱及索引文件保存位置
-+ `freebase_qa/`: 源代码
-+ `requirements.txt`: 项目运行环境
++ `data/`: Datasets
++ `Freebase/`: Directory for storing the knowledge graph and its index files
++ `freebase_qa/`: Source code
++ `requirements.txt`: Project dependencies and environment configuration
 
-## 知识图谱数据下载与处理
-本过程尽量保证全程在`Freebase/`文件夹下运行。
-1. 运行以下[Freebase Setup](https://github.com/GasolSun36/ToG/tree/main/Freebase)中的数据下载与处理步骤。后续代码测试过程中要保证`virtuoso`处于运行状态，后台启动`virtuoso`数据库主要依赖`../bin/virtuoso-t`命令。
-2. 运行`filter_entities.py`，过滤出所有的实体名称。
-3. 运行`build_index.py`构建索引。
+## Knowledge Graph: Download and Preprocessing
+All commands in this section should be executed from within the `Freebase/` directory.
+1. Follow the data download and preprocessing steps outlined in the [Freebase Setup](https://github.com/GasolSun36/ToG/tree/main/Freebase)guide. Please ensure that the `virtuoso` service is running throughout the subsequent testing process. The service can be started in the background using the `../bin/virtuoso-t` command.
+2. Run `filter_entities.py` to extract all entity names.
+3. Run `build_index.py` to build the search index.
 
 ## Run
-1. 运行前先修改`llm_handler.py`中[`run_llm`](https://github.com/jxu3831/RAGE/blob/main/freebase_qa/core/llm_handler.py)大模型部署方式。
-2. 按以下步骤运行
+1. Before execution, you must configure your Large Language Model (LLM) deployment by modifying the `run_llm` function in `llm_handler.py`. You can find the function at this [link](https://github.com/jxu3831/RAGE/blob/main/freebase_qa/core/llm_handler.py).
+2. Execute the following commands to run the main script:
 ```
 cd ../freebase_qa/
-python main.py --LLM qwen 
+python main.py dataset webqsp --LLM gpt-4o-mini --openai_api_keys 'your_keys' --url 'your_llm_url' --engine 'azure_openai' --method rage
 ```
-`--LLM`参数表示选择的大模型，仅体现在最后的结果中，不改变`run_llm`方法部署的大模型，更换大模型时需同时修改。
+The `--LLM` argument is used for logging and naming result files. It does not change the model actually deployed by the `run_llm` function. To switch to a different LLM, you must modify both this argument and the implementation within `run_llm`.
 
-nohup python -u main.py --LLM gpt-4o-mini --engine azure_openai --method rage > gpt.log 2>&1 &
+## Parameter
+We employed a consistent set of parameters for all experiments conducted on the datasets, as detailed below:
+```
+--width 3
+--depth 3
+--relation_num 5
+--agent_count 3
+```
