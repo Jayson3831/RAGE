@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import Dict, List, Any, Set
-from utils.logging_utils import logger
+from logging_utils import logger
 
 class FileUtils:
     @staticmethod

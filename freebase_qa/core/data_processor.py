@@ -4,9 +4,9 @@ from typing import List, Dict, Tuple, Set, Optional
 from pathlib import Path
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer, util
-from config.settings import DATASET_PATHS
-from core.llm_handler import LLMHandler
-from utils.logging_utils import logger
+from ..config.settings import DATASET_PATHS
+from ..core.llm_handler import LLMHandler
+from ..utils.logging_utils import logger
 
 
 class DataProcessor:

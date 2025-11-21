@@ -94,7 +94,7 @@ def shorten_relation(relation: str) -> str:
     return relation
 
 
-def extract_all_triples_from_sparql(sparql_query: str) -> List[Tuple[str, str, str]]:
+def extract_all_triples_from_sparql(sparql_query: str) -> List[List[str]]:
     """
     从SPARQL查询语句中提取所有三元组模式，并实例化
     这些才是真正与问题相关的三元组
@@ -185,6 +185,7 @@ def get_related_triples(entity_id: str, max_triples: int = 100) -> List[Tuple[st
         FILTER(?pred != ns:type.object.type)
         FILTER(?pred != ns:common.topic.webpage)
         FILTER(?pred != ns:common.topic.image)
+        FILTER(?pred != ns:type.object.name)
     }}
     LIMIT {max_triples}
     """
@@ -206,6 +207,7 @@ def get_related_triples(entity_id: str, max_triples: int = 100) -> List[Tuple[st
         FILTER(?pred != ns:type.object.type)
         FILTER(?pred != ns:common.topic.webpage)
         FILTER(?pred != ns:common.topic.image)
+        FILTER(?pred != ns:type.object.name)
     }}
     LIMIT {max_triples}
     """
@@ -237,8 +239,11 @@ def format_triple_as_text(triple: Tuple[str, str, str], name_cache: Dict = {}) -
         obj_name = get_entity_name(obj, name_cache)
     else:
         obj_name = obj
-    
-    return f"{subj_name} {pred} {obj_name}"
+
+    # 将关系中的 . 和 _ 替换为空格
+    pretty_pred = pred.replace('.', ' ').replace('_', ' ')
+
+    return f"{subj_name} {pretty_pred} {obj_name}"
 
 def extract_topic_entities(sample: Dict, dataset: str) -> List[str]:
     """
@@ -354,6 +359,8 @@ def process_sample(sample: Dict, dataset: str, noise_multiplier: int = 8) -> Opt
     # 从SPARQL语句中提取相关三元组
     # print(f"\nProcessing: {question[:50]}...")
     relevant_triples = extract_all_triples_from_sparql(sparql_query)
+    if len(relevant_triples) > 4:
+        return None
     
     # If no relevant triples found, skip this sample
     if not relevant_triples:
@@ -364,7 +371,7 @@ def process_sample(sample: Dict, dataset: str, noise_multiplier: int = 8) -> Opt
     
     # Calculate how many noise triples we need: relevant_count × noise_multiplier
     gold_count = len(relevant_triples)
-    noise_count = gold_count * noise_multiplier
+    noise_count = 10 - gold_count
     
     # print(f"Need {noise_count} noise triples ({gold_count} × {noise_multiplier})")
     
@@ -408,7 +415,10 @@ def process_sample(sample: Dict, dataset: str, noise_multiplier: int = 8) -> Opt
             "text": text,
             "isgold": False
         })
-    
+
+    if len(ctxs) < 10:
+        return None
+
     # Shuffle ctxs to mix gold and noise
     random.shuffle(ctxs)
     
@@ -515,7 +525,7 @@ def main():
     
     # Dataset paths
     dataset_paths = {
-        "webqsp": ("webqsp/WebQSP.train.json", "webqsp/webqsp_with_triples.train.json"),
+        "webqsp": ("webqsp/WebQSP.test.json", "webqsp/webqsp_with_triples.test.json"),
         "grailqa": ("grailqa/grailqa.train.json", "grailqa/grailqa_with_triples.train.json"),
         "cwq": ("cwq/cwq.train.json", "cwq/cwq_with_triples.train.json")
     }

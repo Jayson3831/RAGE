@@ -1,8 +1,8 @@
 import numpy as np
 from typing import Dict
 from sentence_transformers import SentenceTransformer
-from config.settings import EMBEDDING
-from utils.logging_utils import logger
+from ..config.settings import EMBEDDING
+from ..utils.logging_utils import logger
 from pathlib import Path
 import faiss
 import json

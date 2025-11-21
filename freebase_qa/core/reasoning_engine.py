@@ -1,6 +1,6 @@
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Tuple
-from config.settings import (
+from ..config.settings import (
     UNKNOWN_ENTITY, 
     FINISH_ID, 
     FINISH_ENTITY,
@@ -20,11 +20,11 @@ from config.settings import (
     EVALUATE_AND_SYNTHESIZE,
     ANSWER_FROM_KNOWLEDGE
 )
-from core.freebase_client import FreebaseClient
-from core.llm_handler import LLMHandler
-from core.semantic_search import SemanticSearch
-from utils.text_utils import TextUtils
-from utils.logging_utils import logger
+from ..core.freebase_client import FreebaseClient
+from ..core.llm_handler import LLMHandler
+from ..core.semantic_search import SemanticSearch
+from ..utils.text_utils import TextUtils
+from ..utils.logging_utils import logger
 import random
 import re
 import faiss

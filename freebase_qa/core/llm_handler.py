@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import Tuple, List
-from utils.logging_utils import logger
+from ..utils.logging_utils import logger
 from sentence_transformers import SentenceTransformer, util
 from openai import OpenAI, AzureOpenAI
 import os
