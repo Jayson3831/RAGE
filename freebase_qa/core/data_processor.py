@@ -4,9 +4,10 @@ from typing import List, Dict, Tuple, Set, Optional
 from pathlib import Path
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer, util
-from ..config.settings import DATASET_PATHS
-from ..core.llm_handler import LLMHandler
-from ..utils.logging_utils import logger
+from config.settings import DATASET_PATHS, PKL_DATASET_PATHS, PKL_OUTPUT_PATHS
+from core.llm_handler import LLMHandler
+from utils.logging_utils import logger
+import pickle
 
 
 class DataProcessor:
@@ -21,33 +22,36 @@ class DataProcessor:
         path = DATASET_PATHS[dataset_name]
         if not path.exists():
             raise FileNotFoundError(f"Dataset file not found: {path}")
-        
+
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        
+
         # 根据数据集确定问题字段
-        question_field = {
-            'webqsp': 'RawQuestion',
-            'webqsp_500': 'RawQuestion',
-            'webqsp_dt_0.2': 'RawQuestion',
-            'cwq': 'question',
-            'cwq_1000': 'question',
-            'cwq_dt_0.2': 'question',
-            'grailqa': 'question',
-            'grailqa_100': 'question',
-            'webq': 'question',
-            'webqsp_sampled': 'RawQuestion',
-            'ow_webqsp': 'question',
-            'noisy_cwq': 'Noisy_Question',
-            'ow_grailqa': 'question',
-            'noisy_webq': 'Noisy_Question',
-            'hotpotqa': 'question',
-            'triviaqa': 'question',
-            # 其他数据集映射...
-        }.get(dataset_name, 'question')
+        if 'webqsp' in dataset_name:
+            question_field = 'RawQuestion'
+        elif 'noisy' in dataset_name:
+            question_field = 'Noisy_Question'
+        else:
+            question_field = 'question'
         
         return data, question_field
-    
+
+    def load_pkl_dataset(self, dataset_name: str) -> Tuple[List[Dict], str]:
+        """加载pkl格式数据集"""
+        if dataset_name not in PKL_DATASET_PATHS:
+            raise ValueError(f"Dataset {dataset_name} not found")
+        path = PKL_DATASET_PATHS[dataset_name]
+        if not path.exists():
+            raise FileNotFoundError(f"Dataset file not found: {path}")
+
+        with open(path, 'rb') as f:
+            data = pickle.load(f)
+
+        # 根据数据集确定问题字段
+        question_field = 'question'
+
+        return data, question_field
+
     def retrieve_top_docs(self, query: str, docs: List[str], width: int) -> Tuple[List[str], List[float]]:
         """使用SBERT检索相关文档"""
         query_emb = self.model.sbert.encode(query)

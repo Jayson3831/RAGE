@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
 from typing import Dict, List, Any, Set
-from logging_utils import logger
+from utils.logging_utils import logger
+import pickle
 
 class FileUtils:
     @staticmethod
@@ -20,14 +21,20 @@ class FileUtils:
     def load_processed_questions(filename: str) -> Set[str]:
         """加载已处理的问题"""
         questions = set()
+        if not Path(filename).exists():
+            return questions
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 for line in f:
                     entry = json.loads(line.strip())
                     if 'question' in entry:
                         questions.add(entry['question'])
-        except FileNotFoundError:
-            pass
+        except:
+            with open(filename, 'rb') as f:
+                data = pickle.load(f)
+                for entry in data:
+                    if 'question' in entry:
+                        questions.add(entry['question'])
         return questions
     
     @staticmethod

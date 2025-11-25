@@ -2,9 +2,9 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 from typing import List, Dict, Optional
 import time
 from functools import lru_cache
-from ..config.settings import SPARQL_ENDPOINT, UNKNOWN_ENTITY, FINISH_ID
-from ..config.sparql_templates import SPARQL_TEMPLATES
-from ..utils.logging_utils import logger
+from config.settings import SPARQL_ENDPOINT, UNKNOWN_ENTITY, FINISH_ID
+from config.sparql_templates import SPARQL_TEMPLATES
+from utils.logging_utils import logger
 
 class FreebaseClient:
     def __init__(self, endpoint: str = SPARQL_ENDPOINT):

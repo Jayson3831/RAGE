@@ -4,11 +4,11 @@ from copy import deepcopy
 from typing import Dict, Any, List, Optional
 from langgraph.graph import StateGraph, END
 from typing_extensions import TypedDict
-from ..core.freebase_client import FreebaseClient
-from ..core.llm_handler import LLMHandler
-from ..core.reasoning_engine import ReasoningEngine
-from ..core.semantic_search import SemanticSearch
-from ..utils.logging_utils import logger
+from core.freebase_client import FreebaseClient
+from core.llm_handler import LLMHandler
+from core.reasoning_engine import ReasoningEngine
+from core.semantic_search import SemanticSearch
+from utils.logging_utils import logger
 
 
 class DiscussionState(TypedDict):

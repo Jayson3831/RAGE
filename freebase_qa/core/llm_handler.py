@@ -1,9 +1,10 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import Tuple, List
-from ..utils.logging_utils import logger
+from utils.logging_utils import logger
 from sentence_transformers import SentenceTransformer, util
 from openai import OpenAI, AzureOpenAI
+from langchain_openai import ChatOpenAI
 import os
 import time
 
@@ -105,7 +106,7 @@ class LLMHandler:
                 base_url="http://localhost:8000/v1",
             )
             completion = client.chat.completions.create(
-                model="Qwen3-8B",  # 按需更换为其它深度思考模型
+                model="Qwen/Qwen3-8B",  # 按需更换为其它深度思考模型
                 messages=messages,
                 temperature=args.temperature,
                 max_tokens=args.max_tokens,

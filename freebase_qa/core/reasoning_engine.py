@@ -1,6 +1,8 @@
+import pickle
+
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Tuple
-from ..config.settings import (
+from config.settings import (
     UNKNOWN_ENTITY, 
     FINISH_ID, 
     FINISH_ENTITY,
@@ -20,11 +22,12 @@ from ..config.settings import (
     EVALUATE_AND_SYNTHESIZE,
     ANSWER_FROM_KNOWLEDGE
 )
-from ..core.freebase_client import FreebaseClient
-from ..core.llm_handler import LLMHandler
-from ..core.semantic_search import SemanticSearch
-from ..utils.text_utils import TextUtils
-from ..utils.logging_utils import logger
+from core.freebase_client import FreebaseClient
+from core.llm_handler import LLMHandler
+from core.semantic_search import SemanticSearch
+from core.feature_extractor import RetrievalFeatureExtractor
+from utils.text_utils import TextUtils
+from utils.logging_utils import logger
 import random
 import re
 import faiss
@@ -38,6 +41,7 @@ class ReasoningEngine:
         self.llm = llm_handler
         self.text_utils = TextUtils()
         self.semantic_searcher = semantic_searcher
+        self.extractor = RetrievalFeatureExtractor(llm_handler.sbert)
 
     def generate_topic_entity(self, question: str, args: Dict) -> str:
         prompt = self._construct_generated_entity_prompt(question)
@@ -443,6 +447,28 @@ class ReasoningEngine:
         }
         from utils.file_utils import FileUtils
         FileUtils.save_to_jsonl(data, file_name)
+
+    def save_retrieval_results(self, question: str, ctxs: List[Dict], file_name: str):
+        """保存检索结果"""
+        existing_data = []
+        try:
+            with open(file_name, "rb") as f:
+                existing_data = pickle.load(f)
+        except FileNotFoundError:
+            existing_data = []  # 文件不存在时创建空列表
+        except Exception as e:
+            print(f"读取文件失败，创建新文件: {e}")
+            existing_data = []
+
+        # 创建新记录
+        new_record = [{
+            "question": question,
+            "ctxs": ctxs,
+        }]
+        new_record = self.extractor.get_dual_sim(new_record)
+        existing_data.append(new_record[0])
+        with open(file_name, "wb") as f:
+            pickle.dump(existing_data, f)
 
     def _abandon_relation(self, relation: str) -> bool:
         """判断是否应该丢弃关系"""

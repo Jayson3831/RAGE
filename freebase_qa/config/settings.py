@@ -1,11 +1,11 @@
 from pathlib import Path
 
-# 数据集路径
+# json数据集路径
 DATASET_PATHS = {
-    'cwq': Path('../data/cwq.json'),
+    'cwq': Path('../data/cwq/cwq.json'),
     'cwq_1000': Path('../data/cwq/cwq_1000.json'),
     'cwq_dt_0.2': Path('../data/cwq/cwq_with_dt_0.2.json'),
-    'webqsp': Path('../data/WebQSP.json'),
+    'webqsp': Path('../data/webqsp/WebQSP.json'),
     'webqsp_500': Path('../data/webqsp/webqsp_500.json'),
     'webqsp_dt_0.2': Path('../data/webqsp/webqsp_dt_0.2.json'),
     'grailqa': Path('../data/grailqa.json'),
@@ -22,6 +22,12 @@ DATASET_PATHS = {
 }
 OUTPUT_PATH = '../outputs/{method}_{dataset}_{llm}_{suffix}.jsonl'
 JSON_PATH = '../outputs/{method}_{dataset}_{llm}_{suffix}.json'
+
+# pickle 数据集路径
+PKL_DATASET_PATHS = {
+    'webqsp': Path('../data/webqsp/webqsp.test.pkl'),
+}
+PKL_OUTPUT_PATHS = '../retrieval_result/{method}_{dataset}_{llm}_{suffix}.pkl'
 
 PARA_JSONL = '../outputs/para/{dataset}_neighbors{relation_num}_agents{agent_count}_depth{depth}_width{width}.jsonl'
 PARA_JSON = '../outputs/para/{dataset}_neighbors{relation_num}_agents{agent_count}_depth{depth}_width{width}.json'
